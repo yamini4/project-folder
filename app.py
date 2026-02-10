@@ -98,4 +98,39 @@ if uploaded_file:
 
     # ---------------- CLASSIFICATION REPORT ----------------
     st.subheader("📄 Classification Report")
-    st.text(classification_report(y, y_pred))
+
+    report_dict = classification_report(
+        y,
+        y_pred,
+        target_names=["Normal", "Suspect", "Pathological"],
+        output_dict=True
+    )
+
+    report_df = pd.DataFrame(report_dict).transpose()
+    report_df = report_df.round(3)
+
+    st.markdown("""
+    <style>
+    .report-table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+    .report-table th {
+        background-color: #0f4c81;
+        color: white;
+        padding: 10px;
+        text-align: center;
+    }
+    .report-table td {
+        padding: 8px;
+        text-align: center;
+        border-bottom: 1px solid #ddd;
+    }
+    .report-table tr:hover {
+        background-color: #f1f1f1;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown(report_df.to_html(classes="report-table", border=0), unsafe_allow_html=True)
+
