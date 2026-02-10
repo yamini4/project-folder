@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import importlib
+import pickle
 from sklearn.metrics import (
     accuracy_score, roc_auc_score,
     precision_score, recall_score,
@@ -17,12 +18,12 @@ st.title("📊 ML Classification Models – Evaluation App")
 
 # ---------------- MODEL SELECTION ----------------
 MODEL_MAP = {
-    "Logistic Regression": "logistic_reg_model",
-    "Decision Tree": "decision_tree_model",
-    "KNN": "KNN_model",
-    "Naive Bayes": "naive_bayes_model",
-    "Random Forest": "random_forest_model",
-    "XGBoost": "XGBoost_model"
+    "Logistic Regression": pickle.load(open("model/logistic_reg_model", "rb")),
+    "Decision Tree": pickle.load(open("model/decision_tree_model", "rb")),
+    "KNN": pickle.load(open("model/KNN_model", "rb")),
+    "Naive Bayes": pickle.load(open("model/naive_bayes_model", "rb")),
+    "Random Forest": pickle.load(open("model/random_forest_model", "rb")),
+    "XGBoost": pickle.load(open("model/XGBoost_model", "rb"))
 }
 
 model_choice = st.selectbox("Select a Model", MODEL_MAP.keys())
