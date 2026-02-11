@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import importlib
 import pickle
+from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import (
     accuracy_score, roc_auc_score,
     precision_score, recall_score,
@@ -13,10 +13,10 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 # ---------------- PAGE CONFIG ----------------
-st.set_page_config(page_title="ML Classification App", layout="wide")
-st.title("📊 ML Classification Models – Evaluation App")
+st.set_page_config(page_title="Adult Income Classification", layout="wide")
+st.title("📊 Adult Income – Model Evaluation App")
 
-# ---------------- MODEL SELECTION ----------------
+# ---------------- LOAD MODELS ----------------
 MODEL_MAP = {
     "Logistic Regression": pickle.load(open("model/logistic_reg_model.pkl", "rb")),
     "Decision Tree": pickle.load(open("model/decision_tree_model.pkl", "rb")),
@@ -29,10 +29,7 @@ MODEL_MAP = {
 model_choice = st.selectbox("Select a Model", MODEL_MAP.keys())
 
 # ---------------- DATA UPLOAD ----------------
-uploaded_file = st.file_uploader(
-    "Upload Test Dataset (CSV only)",
-    type=["csv"]
-)
+uploaded_file = st.file_uploader("Upload Test Dataset (CSV only)", type=["csv"])
 
 if uploaded_file:
     data = pd.read_csv(uploaded_file)
@@ -42,26 +39,34 @@ if uploaded_file:
         st.error("❌ Target column 'income' not found in dataset")
         st.stop()
 
+    # ---------------- PREPROCESSING ----------------
+    data.columns = data.columns.str.strip()
+
+    # Clean target
+    data["income"] = data["income"].str.strip()
+    data["income"] = LabelEncoder().fit_transform(data["income"])
+
+    # Encode categorical columns
+    categorical_cols = data.select_dtypes(include="object").columns
+    for col in categorical_cols:
+        data[col] = data[col].str.strip()
+        data[col] = LabelEncoder().fit_transform(data[col])
+
     X = data.drop("income", axis=1)
     y = data["income"]
 
-    # ---------------- LOAD MODEL ----------------
-    try:
-        module_name = MODEL_MAP[model_choice]
-        y_pred = module_name.predict(X)
-        model_module = importlib.import_module(f"model.{module_name}")
-        model = model_module.load_model()
-    except Exception as e:
-        st.error(f"❌ Error loading model: {e}")
-        st.stop()
+    # ---------------- LOAD SELECTED MODEL ----------------
+    model = MODEL_MAP[model_choice]
 
     # ---------------- PREDICTION ----------------
     y_pred = model.predict(X)
 
     if hasattr(model, "predict_proba"):
         y_prob = model.predict_proba(X)[:, 1]
+        auc = roc_auc_score(y, y_prob)
     else:
         y_prob = None
+        auc = "Not Available"
 
     # ---------------- METRICS ----------------
     acc = accuracy_score(y, y_pred)
@@ -69,11 +74,6 @@ if uploaded_file:
     rec = recall_score(y, y_pred)
     f1 = f1_score(y, y_pred)
     mcc = matthews_corrcoef(y, y_pred)
-
-    if y_prob is not None:
-        auc = roc_auc_score(y, y_prob)
-    else:
-        auc = "Not Available"
 
     # ---------------- DISPLAY METRICS ----------------
     st.subheader("📌 Evaluation Metrics")
@@ -104,35 +104,10 @@ if uploaded_file:
     report_dict = classification_report(
         y,
         y_pred,
-        target_names=["Normal", "Suspect", "Pathological"],
+        target_names=["<=50K", ">50K"],
         output_dict=True
     )
 
-    report_df = pd.DataFrame(report_dict).transpose()
-    report_df = report_df.round(3)
+    report_df = pd.DataFrame(report_dict).transpose().round(3)
 
-    st.markdown("""
-    <style>
-    .report-table {
-        border-collapse: collapse;
-        width: 100%;
-    }
-    .report-table th {
-        background-color: #0f4c81;
-        color: white;
-        padding: 10px;
-        text-align: center;
-    }
-    .report-table td {
-        padding: 8px;
-        text-align: center;
-        border-bottom: 1px solid #ddd;
-    }
-    .report-table tr:hover {
-        background-color: #f1f1f1;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-    st.markdown(report_df.to_html(classes="report-table", border=0), unsafe_allow_html=True)
-
+    st.dataframe(report_df)
