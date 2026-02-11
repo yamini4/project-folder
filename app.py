@@ -48,6 +48,7 @@ if uploaded_file:
     # ---------------- LOAD MODEL ----------------
     try:
         module_name = MODEL_MAP[model_choice]
+        y_pred = module_name.predict(X)
         model_module = importlib.import_module(f"model.{module_name}")
         model = model_module.load_model()
     except Exception as e:
