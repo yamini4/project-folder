@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(page_title="Adult Income Classification", layout="wide")
-st.title("📊 Adult Income – Model Evaluation App")
+st.title("📊 Adult Income – Model Evaluation App - ML Classification Models")
 
 # ---------------- LOAD MODELS ----------------
 MODEL_MAP = {
