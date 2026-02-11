@@ -18,12 +18,12 @@ st.title("📊 ML Classification Models – Evaluation App")
 
 # ---------------- MODEL SELECTION ----------------
 MODEL_MAP = {
-    "Logistic Regression": pickle.load(open("model/logistic_reg_model", "rb")),
-    "Decision Tree": pickle.load(open("model/decision_tree_model", "rb")),
-    "KNN": pickle.load(open("model/KNN_model", "rb")),
-    "Naive Bayes": pickle.load(open("model/naive_bayes_model", "rb")),
-    "Random Forest": pickle.load(open("model/random_forest_model", "rb")),
-    "XGBoost": pickle.load(open("model/XGBoost_model", "rb"))
+    "Logistic Regression": pickle.load(open("model/logistic_reg_model.pkl", "rb")),
+    "Decision Tree": pickle.load(open("model/decision_tree_model.pkl", "rb")),
+    "KNN": pickle.load(open("model/KNN_model.pkl", "rb")),
+    "Naive Bayes": pickle.load(open("model/naive_bayes_model.pkl", "rb")),
+    "Random Forest": pickle.load(open("model/random_forest_model.pkl", "rb")),
+    "XGBoost": pickle.load(open("model/XGBoost_model.pkl", "rb"))
 }
 
 model_choice = st.selectbox("Select a Model", MODEL_MAP.keys())
@@ -48,6 +48,7 @@ if uploaded_file:
     # ---------------- LOAD MODEL ----------------
     try:
         module_name = MODEL_MAP[model_choice]
+        y_pred = module_name.predict(X)
         model_module = importlib.import_module(f"model.{module_name}")
         model = model_module.load_model()
     except Exception as e:
